@@ -1,0 +1,444 @@
+include "target.tmh"
+
+/*
+	Set up your keys here
+*/
+
+int BANK_LEFT = 'a';
+int BANK_RIGHT = 'd';
+int PITCH_NOSE_DOWN = 'w';
+int PITCH_NOSE_UP = 's';
+int YAW_LEFT = 'q';
+int YAW_RIGHT = 'e';
+int FIRE_BUTTON = SPC;
+int THROTTLE_UP = L_SHIFT;
+int THROTTLE_DOWN = L_CTL;
+int DROP_DRUGS = RARROW;
+int TARGET_NEXT = KP6; // Num 6
+int TARGET_PREV = KP5;  // Num 5
+int BOMB_BAY_DOORS = '3';
+int COUNTERMEASURES = '4';
+int WEAPON_NEXT = ']';
+int WEAPON_PREV = '[';
+int GEAR = 'g';
+int WEAPON_CAMERA = '2';
+int ROCKET_BOOST = KP1;  // Num 1
+int SPECIAL = 'h'; // things like akula stealth or cargobob hook
+
+/*
+	input ranges (delay between key presses in ms)
+*/
+int input_8 = 35; //35;
+int input_7 = 50; //45;
+int input_6 = 60; //55;
+int input_5 = 80; //65;
+int input_4 = 110; //75;
+int input_3 = 140; //85;
+int input_2 = 170; //95;
+int input_1 = 200; //105;
+
+/*
+	set curve ranges for inputs (max threshold)
+*/
+
+int div1 = 5;
+int div2 = 13;
+int div3 = 21;
+int div4 = 27;
+int div5 = 33;
+int div6 = 37;
+int div7 = 41;
+int div8 = 45;
+int div9 = 48;
+
+
+int input_8_threshold_l = 50 - div9;
+int input_7_threshold_l = 50 - div8;
+int input_6_threshold_l = 50 - div7;
+int input_5_threshold_l = 50 - div6;
+int input_4_threshold_l = 50 - div5;
+int input_3_threshold_l = 50 - div4;
+int input_2_threshold_l = 50 - div3;
+int input_1_threshold_l = 50 - div2;
+int deadzone_threshold_l = 50 - div1;
+int deadzone_threshold_r = 50 + div1;
+int input_1_threshold_r = 50 + div2;
+int input_2_threshold_r = 50 + div3;
+int input_3_threshold_r = 50 + div4;
+int input_4_threshold_r = 50 + div5;
+int input_5_threshold_r = 50 + div6;
+int input_6_threshold_r = 50 + div7;
+int input_7_threshold_r = 50 + div8;
+int input_8_threshold_r = 50 + div9;
+
+int main() {
+	//FreeProcInstance();
+	Configure(&HCougar, MODE_EXCLUDED);
+	Configure(&JoystickF18, MODE_EXCLUDED);
+	// Configure(&Throttle, MODE_EXCLUDED); // including the warthog throttle!
+	Configure(&T16000, MODE_EXCLUDED);
+	Configure(&T16000L, MODE_EXCLUDED);
+	Configure(&LMFD, MODE_EXCLUDED);
+	Configure(&RMFD, MODE_EXCLUDED);
+	Configure(&TFRPRudder, MODE_EXCLUDED);
+	Configure(&TWCSThrottle, MODE_EXCLUDED);
+	Configure(&TFRPHARudder, MODE_EXCLUDED);
+	
+	if(Init(&EventHandle)) return 1;
+	
+	SetKBRate(20, 20); // was 20, 33
+	SetKBLayout(KB_ENG);
+	
+	// test function
+	
+	int max_forward_led = CHAIN(
+		LED(&Throttle, LED_ONOFF, LED_CURRENT+LED1),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED2),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED3),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED4),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED5)
+	);
+	
+	int mid_forward_led = CHAIN(
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED1),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT+LED2),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED3),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED4),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED5)
+	);
+	
+	int idle_led = CHAIN(
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED1),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED2),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT+LED3),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED4),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED5)
+	);
+	
+	int mid_reverse_led = CHAIN(
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED1),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED2),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED3),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT+LED4),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED5)
+	);
+	
+	
+	int max_reverse_led = CHAIN(
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED1),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED2),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED3),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT-LED4),
+		LED(&Throttle, LED_ONOFF, LED_CURRENT+LED5)
+	);
+	
+	/*CONTROL THE THROTTLE HERE*/
+	
+	/*
+		thrust
+	*/
+	
+	KeyAxis(
+		&Throttle,
+		THR_RIGHT, 
+		0,
+		AXMAP2(
+			/*LIST(
+				0,
+				input_8_threshold_l,
+				input_7_threshold_l,
+				input_6_threshold_l,
+				input_5_threshold_l,
+				input_4_threshold_l,
+				input_3_threshold_l,
+				input_2_threshold_l,
+				input_1_threshold_l,
+				deadzone_threshold_l,
+				deadzone_threshold_r,
+				input_1_threshold_r,
+				input_2_threshold_r,
+				input_3_threshold_r,
+				input_4_threshold_r,
+				input_5_threshold_r,
+				input_6_threshold_r,
+				input_7_threshold_r,
+				input_8_threshold_r,
+				100
+			),*/
+			LIST(
+				0,
+				5,
+				10,
+				15,
+				20,
+				25,
+				30,
+				35,
+				40,
+				45,
+				55,
+				60,
+				65,
+				70,
+				75,
+				80,
+				85,
+				90,
+				95,
+				100
+			),
+			CHAIN(EXEC("if (Throttle[EACON]) ActKey(KEYON+THROTTLE_DOWN);"), max_reverse_led),
+			CHAIN(REXEC(32, input_8, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(33, input_7, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),	
+			CHAIN(REXEC(34, input_6, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(35, input_5, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(36, input_4, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(37, input_3, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(38, input_2, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(REXEC(39, input_1, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_DOWN);"), mid_reverse_led),
+			CHAIN(0,idle_led),
+			CHAIN(REXEC(40, input_1, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(41, input_2, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(42, input_3, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(43, input_4, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(44, input_5, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(45, input_6, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(46, input_7, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(REXEC(47, input_8, "if (Throttle[EACON]) ActKey(KEYON+PULSE+THROTTLE_UP);"), mid_forward_led),
+			CHAIN(EXEC("if (Throttle[EACON]) ActKey(KEYON+THROTTLE_UP);"), max_forward_led)
+		)
+	);
+	
+	/*
+		yaw
+	*/
+	
+	KeyAxis(
+		&Throttle,
+		SCX,
+		0,
+		AXMAP2(
+			LIST(
+				0,
+				input_8_threshold_l,
+				input_7_threshold_l,
+				input_6_threshold_l,
+				input_5_threshold_l,
+				input_4_threshold_l,
+				input_3_threshold_l,
+				input_2_threshold_l,
+				input_1_threshold_l,
+				deadzone_threshold_l,
+				deadzone_threshold_r,
+				input_1_threshold_r,
+				input_2_threshold_r,
+				input_3_threshold_r,
+				input_4_threshold_r,
+				input_5_threshold_r,
+				input_6_threshold_r,
+				input_7_threshold_r,
+				input_8_threshold_r,
+				100
+			),
+			YAW_LEFT,
+			REXEC(0, input_8, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(1, input_7, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(2, input_6, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(3, input_5, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(4, input_4, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(5, input_3, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(6, input_2, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			REXEC(7, input_1, "ActKey(KEYON+PULSE+YAW_LEFT);"),
+			0,
+			REXEC(8, input_1, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(9, input_2, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(10, input_3, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(11, input_4, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(12, input_5, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(13, input_6, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(14, input_7, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			REXEC(15, input_8, "ActKey(KEYON+PULSE+YAW_RIGHT);"),
+			YAW_RIGHT
+		)
+	);
+
+	MapAxis(&Throttle, SCX, DX_XROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, SCX, 0, 0, 0, 0, 0);
+	MapAxis(&Throttle, SCY, DX_YROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, SCY, 0, 0, 0, 0, 0);
+	MapAxis(&Throttle, THR_RIGHT, DX_Z_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, THR_RIGHT, 0, 0, 0, 0, 0);
+	MapAxis(&Throttle, THR_LEFT, DX_ZROT_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, THR_LEFT, 0, 0, 0, 0, 0);
+	MapAxis(&Throttle, THR_FC, DX_SLIDER_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Throttle, THR_FC, 0, 0, 0, 0, 0);
+	
+	/*CONTROL THE JOYSTICK HERE*/
+	
+	/*
+		x-axis (roll)
+	*/
+	
+	KeyAxis(
+		&Joystick,
+		JOYX,
+		0,
+		AXMAP2(
+			LIST(
+				0,
+				input_8_threshold_l,
+				input_7_threshold_l,
+				input_6_threshold_l,
+				input_5_threshold_l,
+				input_4_threshold_l,
+				input_3_threshold_l,
+				input_2_threshold_l,
+				input_1_threshold_l,
+				deadzone_threshold_l,
+				deadzone_threshold_r,
+				input_1_threshold_r,
+				input_2_threshold_r,
+				input_3_threshold_r,
+				input_4_threshold_r,
+				input_5_threshold_r,
+				input_6_threshold_r,
+				input_7_threshold_r,
+				input_8_threshold_r,
+				100
+			),
+			BANK_LEFT,
+			REXEC(0, input_8, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(1, input_7, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(2, input_6, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(3, input_5, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(4, input_4, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(5, input_3, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(6, input_2, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			REXEC(7, input_1, "ActKey(KEYON+PULSE+BANK_LEFT);"),
+			0,
+			REXEC(8, input_1, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(9, input_2, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(10, input_3, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(11, input_4, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(12, input_5, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(13, input_6, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(14, input_7, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			REXEC(15, input_8, "ActKey(KEYON+PULSE+BANK_RIGHT);"),
+			BANK_RIGHT
+		)
+	);
+	
+	/*
+		y-axis (pitch)
+	*/
+	
+	KeyAxis(
+		&Joystick,
+		JOYY,
+		0,
+		AXMAP2(
+			LIST(
+				0,
+				input_8_threshold_l,
+				input_7_threshold_l,
+				input_6_threshold_l,
+				input_5_threshold_l,
+				input_4_threshold_l,
+				input_3_threshold_l,
+				input_2_threshold_l,
+				input_1_threshold_l,
+				deadzone_threshold_l,
+				deadzone_threshold_r,
+				input_1_threshold_r,
+				input_2_threshold_r,
+				input_3_threshold_r,
+				input_4_threshold_r,
+				input_5_threshold_r,
+				input_6_threshold_r,
+				input_7_threshold_r,
+				input_8_threshold_r,
+				100
+			),
+			PITCH_NOSE_DOWN,
+			REXEC(16, input_8, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(17, input_7, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(18, input_6, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(19, input_5, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(20, input_4, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(21, input_3, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(22, input_2, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			REXEC(23, input_1, "ActKey(KEYON+PULSE+PITCH_NOSE_DOWN);"),
+			0,
+			REXEC(24, input_1, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(25, input_2, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(26, input_3, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(27, input_4, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(28, input_5, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(29, input_6, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(30, input_7, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			REXEC(31, input_8, "ActKey(KEYON+PULSE+PITCH_NOSE_UP);"),
+			PITCH_NOSE_UP
+		)
+	);
+	
+	MapAxis(&Joystick, JOYX, DX_X_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Joystick, JOYX, 0, 0, 0, 0, 0);
+	MapAxis(&Joystick, JOYY, DX_Y_AXIS, AXIS_NORMAL, MAP_ABSOLUTE);
+	SetSCurve(&Joystick, JOYY, 0, 0, 0, 0, 0);
+	
+	// joystick
+	
+	MapKey(&Joystick, TG1, EXEC("if (Throttle[EACON]) ActKey(KEYON+FIRE_BUTTON);"));
+	MapKeyR(&Joystick, TG1, EXEC("ActKey(FIRE_BUTTON);"));
+	MapKey(&Joystick, H3L, EXEC("if (Throttle[EACON]) ActKey(KEYON+YAW_LEFT);"));
+	MapKeyR(&Joystick, H3L, EXEC("ActKey(YAW_LEFT);"));
+	MapKey(&Joystick, H3R, EXEC("if (Throttle[EACON]) ActKey(KEYON+YAW_RIGHT);"));
+	MapKeyR(&Joystick, H3R, EXEC("ActKey(YAW_RIGHT);"));
+	MapKey(&Joystick, H2D, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+TARGET_PREV);"));
+	MapKey(&Joystick, H2U, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+TARGET_NEXT);"));
+	MapKey(&Joystick, H4D, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+WEAPON_PREV);"));
+	MapKey(&Joystick, H4U, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+WEAPON_NEXT);"));
+	MapKey(&Joystick, S4, EXEC("if (Throttle[EACON]) ActKey(KEYON+BOMB_BAY_DOORS);"));
+	MapKeyR(&Joystick, S4, EXEC("ActKey(BOMB_BAY_DOORS);"));
+	MapKey(&Joystick, S1, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+COUNTERMEASURES);"));
+	MapKey(&Joystick, S2, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+SPECIAL);"));
+	//MapKey(&Joystick, TG1, FIRE_BUTTON);
+	//MapKey(&Joystick, H3L, YAW_LEFT);
+	//MapKey(&Joystick, H3R, YAW_RIGHT);
+	//MapKey(&Joystick, H2L, PULSE+TARGET_PREV);
+	//MapKey(&Joystick, H2R, PULSE+TARGET_NEXT);
+	//MapKey(&Joystick, H4L, PULSE+WEAPON_PREV);
+	//MapKey(&Joystick, H4R, PULSE+WEAPON_NEXT);
+	//MapKey(&Joystick, S4, BOMB_BAY_DOORS);
+	//MapKey(&Joystick, S1, COUNTERMEASURES);
+	// MapKey(&Joystick, ???, PULSE+DROP_DRUGS);
+	
+	// throttle
+	
+	MapKey(&Throttle, LDGH, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+GEAR);"));
+	MapKey(&Throttle, LTB, EXEC("if (Throttle[EACON]) ActKey(KEYON+PULSE+ROCKET_BOOST);"));
+	//MapKey(&Throttle, LDGH, PULSE+GEAR);
+	//MapKey(&Throttle, LTB, PULSE+ROCKET_BOOST);
+	
+	MapKey(&Throttle,
+		EACOFF,
+		CHAIN(
+			EXEC("ActKey(THROTTLE_UP);"), 
+			EXEC("ActKey(THROTTLE_DOWN);"), 
+			LED(&Throttle, LED_ONOFF, LED_CURRENT-LED0)
+		)
+	);
+	MapKey(&Throttle,
+		EACON,
+		CHAIN( 
+			LED(&Throttle, LED_ONOFF, LED_CURRENT+LED0)
+		)
+	);
+	
+	// init backlight
+	
+	if(Throttle[EACON]) LED(&Throttle, LED_ONOFF, LED_CURRENT+LED0); else ActKey(PULSE+KEYON+LED(&Throttle, LED_ONOFF, LED_CURRENT-LED0));
+}
+int EventHandle(int type, alias o, int x) {
+	DefaultMapping(&o, x);
+}
